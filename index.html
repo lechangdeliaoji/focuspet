@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0c10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="番茄宠物">
+<meta name="description" content="番茄钟 + 积分 + 虚拟宠物养成的专注激励 App">
+<title>番茄宠物 · FocusPet</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== 顶栏 ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🍅</span>
+      <span>番茄宠物<small>FOCUS · PET</small></span>
+    </div>
+    <div class="pill" id="pointsPill"><span class="coin"></span><span id="pointsNum">0</span></div>
+  </header>
+
+  <main>
+    <!-- ================= 专注 ================= -->
+    <section class="view active" id="view-focus">
+      <div class="hi">
+        <h1 id="greet">专注一点，它就长大一点</h1>
+        <p id="streakLine">🔥 连续 0 天 · 今日 0 个番茄</p>
+      </div>
+
+      <div class="chips" id="modeChips">
+        <button class="chip on" data-mode="focus">专注 25</button>
+        <button class="chip" data-mode="short">短休 5</button>
+        <button class="chip" data-mode="long">长休 15</button>
+      </div>
+
+      <div class="dial-wrap">
+        <svg class="dial" viewBox="0 0 220 220">
+          <defs>
+            <linearGradient id="gFocus" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ff8b6b"/><stop offset="100%" stop-color="#ff3d7f"/>
+            </linearGradient>
+            <linearGradient id="gBreak" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#3ddc97"/><stop offset="100%" stop-color="#2bb7ff"/>
+            </linearGradient>
+          </defs>
+          <circle class="track" cx="110" cy="110" r="96"/>
+          <circle class="prog" id="dialProg" cx="110" cy="110" r="96"
+                  stroke="url(#gFocus)" stroke-dasharray="603.2" stroke-dashoffset="0"/>
+        </svg>
+        <div class="dial-center">
+          <div>
+            <div class="time" id="timeText">25:00</div>
+            <div class="state-txt" id="stateText">准备开始</div>
+            <div class="round-dots" id="roundDots"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-ico" id="btnReset" title="重置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
+        <button class="btn-main" id="btnMain">开始专注</button>
+        <button class="btn-ico" id="btnSkip" title="跳过">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg>
+        </button>
+      </div>
+
+      <div class="today-strip">
+        <div class="item"><div class="n" id="todayPomo">0</div><div class="l">今日番茄</div></div>
+        <div class="item"><div class="n" id="todayMin">0<small style="font-size:11px;color:#616c7d"> 分</small></div><div class="l">专注时长</div></div>
+        <div class="item"><div class="n" id="todayPts">+0</div><div class="l">今日积分</div></div>
+      </div>
+
+      <h3 class="sec">当前任务 <a id="jumpTasks">全部任务 ›</a></h3>
+      <button class="task-pick" id="taskPick">
+        <span class="dot" id="pickDot"></span>
+        <span class="grow">
+          <span class="k">正在专注</span>
+          <span class="v" id="pickTitle">未选择任务（自由专注）</span>
+        </span>
+        <span style="color:#616c7d">›</span>
+      </button>
+
+      <h3 class="sec">今日目标 <span class="tiny muted" id="goalTxt">0 / 8</span></h3>
+      <div class="card">
+        <div class="bar" style="height:9px"><i id="goalBar" style="width:0%;background:linear-gradient(90deg,#ff8b6b,#ff3d7f)"></i></div>
+        <div class="between" style="margin-top:12px">
+          <span class="tiny muted">达成目标额外奖励 +20 分</span>
+          <button class="use-btn" id="btnGoal">调整目标</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 任务 ================= -->
+    <section class="view" id="view-tasks">
+      <div class="hi">
+        <h1>时间任务</h1>
+        <p>给每件事设定时长，完成后拿积分奖励</p>
+      </div>
+      <div class="quick-add">
+        <input id="quickInput" placeholder="要专注做什么？" maxlength="60">
+        <button id="quickBtn">+</button>
+      </div>
+      <div class="filters" id="taskFilters">
+        <button class="on" data-f="active">进行中</button>
+        <button data-f="done">已完成</button>
+        <button data-f="all">全部</button>
+      </div>
+      <div id="taskList"></div>
+    </section>
+
+    <!-- ================= 宠物 ================= -->
+    <section class="view" id="view-pet">
+      <div class="hi">
+        <h1>我的小宠物</h1>
+        <p>专注赚积分 → 买吃的穿的 → 它会越来越黏你</p>
+      </div>
+
+      <div class="pet-room" id="petRoom">
+        <div class="pet-sky" id="petSky"></div>
+        <div class="pet-head">
+          <div>
+            <div class="pet-name" id="petName">团子 <span class="lv" id="petLv">Lv.1</span></div>
+            <div class="pet-stage" id="petStageTxt">幼崽期</div>
+          </div>
+          <div class="pet-stage-wrap">
+            <div class="tiny muted">亲密度</div>
+            <div class="pet-stage-bar"><i id="bondBar" style="width:0%"></i></div>
+            <div class="tiny" style="color:#616c7d;margin-top:4px" id="bondTxt">0 / 100</div>
+          </div>
+        </div>
+
+        <div class="stage" id="petStage">
+          <div class="pet-shadow"></div>
+          <div id="petBox"></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="lab"><span>🍗 饱食度</span><b id="vHunger">0</b></div>
+            <div class="bar"><i data-k="hunger" id="bHunger" style="width:0%"></i></div>
+          </div>
+          <div class="stat">
+            <div class="lab"><span>💗 心情</span><b id="vMood">0</b></div>
+            <div class="bar"><i data-k="mood" id="bMood" style="width:0%"></i></div>
+          </div>
+          <div class="stat">
+            <div class="lab"><span>⚡ 精力</span><b id="vEnergy">0</b></div>
+            <div class="bar"><i data-k="energy" id="bEnergy" style="width:0%"></i></div>
+          </div>
+          <div class="stat">
+            <div class="lab"><span>🫧 清洁</span><b id="vClean">0</b></div>
+            <div class="bar"><i data-k="clean" id="bClean" style="width:0%"></i></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button data-act="feed"><span class="ic">🍖</span>喂食</button>
+          <button data-act="play"><span class="ic">🎾</span>玩耍</button>
+          <button data-act="pet"><span class="ic">🫶</span>抚摸</button>
+          <button data-act="bath"><span class="ic">🛁</span>洗澡</button>
+        </div>
+      </div>
+
+      <h3 class="sec">衣柜 · 穿戴中 <a id="jumpShop">去商店 ›</a></h3>
+      <div class="card" id="wearing"></div>
+
+      <h3 class="sec">它的小档案</h3>
+      <div class="card">
+        <div class="between" style="padding:4px 0"><span class="muted tiny">陪伴天数</span><b id="fDays">1 天</b></div>
+        <div class="between" style="padding:4px 0"><span class="muted tiny">累计投喂</span><b id="fFed">0 次</b></div>
+        <div class="between" style="padding:4px 0"><span class="muted tiny">一起专注</span><b id="fFocus">0 个番茄</b></div>
+        <div class="between" style="padding:4px 0"><span class="muted tiny">它最喜欢</span><b id="fLike">—</b></div>
+      </div>
+    </section>
+
+    <!-- ================= 商店 ================= -->
+    <section class="view" id="view-shop">
+      <div class="hi">
+        <h1>宠物商店</h1>
+        <p>用专注赚来的积分，换它开心的样子</p>
+      </div>
+      <div class="wallet">
+        <div class="grow">
+          <div class="lbl">我的积分</div>
+          <div class="big" id="shopPoints">0</div>
+        </div>
+        <div style="text-align:right">
+          <div class="lbl">今日已赚</div>
+          <div style="font-weight:700;color:var(--mint)" id="shopTodayIncome">+0</div>
+        </div>
+      </div>
+      <div class="shop-tabs" id="shopTabs">
+        <button class="on" data-cat="food">🍖 食物</button>
+        <button data-cat="toy">🎾 玩具</button>
+        <button data-cat="wear">🎀 服饰</button>
+        <button data-cat="bag">🎒 背包</button>
+      </div>
+      <div id="shopBody"></div>
+    </section>
+
+    <!-- ================= 我的 ================= -->
+    <section class="view" id="view-me">
+      <div class="hi">
+        <h1>我的</h1>
+        <p>数据都在本机，不上传任何服务器</p>
+      </div>
+
+      <div class="card">
+        <div class="between">
+          <div class="row">
+            <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#ff8b6b,#ff3d7f);display:grid;place-items:center;font-size:22px">🍅</div>
+            <div>
+              <div style="font-weight:700" id="meLvTxt">专注学徒 · Lv.1</div>
+              <div class="tiny muted" id="meLvSub">累计专注 0 分钟</div>
+            </div>
+          </div>
+          <div class="tiny" style="color:var(--gold);font-weight:700" id="meSignState">已签到</div>
+        </div>
+        <div class="lvl-wrap">
+          <div class="between tiny muted"><span>距离下一级</span><span id="meLvNeed">还需 60 分钟</span></div>
+          <div class="lvl-bar"><i id="meLvBar" style="width:0%"></i></div>
+        </div>
+        <button class="btn primary" id="btnSign" style="margin-top:16px;width:100%">每日签到 +10</button>
+      </div>
+
+      <h3 class="sec">数据总览</h3>
+      <div class="stat-grid">
+        <div class="stat-card acc"><div class="n" id="sTotalPomo">0</div><div class="l">累计番茄</div></div>
+        <div class="stat-card"><div class="n" id="sTotalMin">0<small>分</small></div><div class="l">累计专注</div></div>
+        <div class="stat-card"><div class="n" id="sStreak">0<small>天</small></div><div class="l">最长连续</div></div>
+        <div class="stat-card"><div class="n" id="sTasks">0</div><div class="l">完成任务</div></div>
+      </div>
+
+      <h3 class="sec">最近记录</h3>
+      <div class="card" id="logList"></div>
+
+      <h3 class="sec">设置</h3>
+      <div class="list">
+        <button class="li" id="setDur"><span class="ic">⏱</span><span class="tx">时长设置<small id="durSub">专注 25 · 短休 5 · 长休 15</small></span><span class="ar">›</span></button>
+        <div class="li"><span class="ic">🔔</span><span class="tx">声音提醒<small>结束时的提示音</small></span><div class="switch on" id="swSound"><i></i></div></div>
+        <div class="li"><span class="ic">📳</span><span class="tx">震动反馈<small>手机支持时生效</small></span><div class="switch on" id="swVibrate"><i></i></div></div>
+        <button class="li" id="setPet"><span class="ic">🐾</span><span class="tx">宠物设置<small id="petSub">团子 · 小猫</small></span><span class="ar">›</span></button>
+        <button class="li" id="btnExport"><span class="ic">📤</span><span class="tx">导出备份<small>保存为 JSON 文件</small></span><span class="ar">›</span></button>
+        <button class="li" id="btnImport"><span class="ic">📥</span><span class="tx">导入备份<small>从 JSON 恢复</small></span><span class="ar">›</span></button>
+        <button class="li" id="btnReset"><span class="ic">♻️</span><span class="tx" style="color:#ff6b6b">清空所有数据<small>不可恢复</small></span><span class="ar">›</span></button>
+      </div>
+      <p class="tiny" style="text-align:center;color:#4d5665;margin:22px 0 8px">番茄宠物 v1.0 · 本地离线运行</p>
+    </section>
+  </main>
+
+  <!-- ===== 底栏 ===== -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-v="focus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <circle cx="12" cy="13" r="8.5"/><path d="M12 9.5V13l2.5 1.6"/><path d="M9 2.5h6"/></svg>
+      <span>专注</span>
+    </button>
+    <button class="tab" data-v="tasks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h11M4 12h11M4 18h7"/><path d="M17.5 15.5l1.8 1.8 3-3.3"/></svg>
+      <span>任务</span>
+    </button>
+    <button class="tab" data-v="pet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.5 10.5c0-2 1.2-5 3-5s2.5 2.2 2.5 4"/><path d="M19.5 10.5c0-2-1.2-5-3-5s-2.5 2.2-2.5 4"/>
+        <path d="M12 9c3.3 0 6 2.7 6 6 0 2.4-1.6 4-4 4-1 0-1.4-.3-2-.3s-1 .3-2 .3c-2.4 0-4-1.6-4-4 0-3.3 2.7-6 6-6z"/></svg>
+      <span>宠物</span>
+    </button>
+    <button class="tab" data-v="shop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      <span>商店</span>
+    </button>
+    <button class="tab" data-v="me">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.6-3.6 3.7-5.6 7.5-5.6s6.9 2 7.5 5.6"/></svg>
+      <span>我的</span>
+    </button>
+  </nav>
+</div>
+
+<!-- 弹层 -->
+<div class="mask" id="mask">
+  <div class="sheet" id="sheet">
+    <div class="grab"></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fileIn" accept="application/json,.json" style="display:none">
+
+<script src="pet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

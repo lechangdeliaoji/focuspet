@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>TEST</title>
+<style>html,body{margin:0;background:#0b0e13;color:#c8d3e0;font:13px/1.7 ui-monospace,Consolas,monospace}
+#f{width:390px;height:844px;border:0;position:absolute;left:-9999px;top:0}
+#out{padding:12px;white-space:pre-wrap;margin:0}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out">running…</pre>
+<script>
+var f = document.getElementById('f');
+var out = document.getElementById('out');
+var lines = [];
+var phase = 0;
+var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+function ok(name, val) { lines.push('ok   | ' + name + (val !== undefined && val !== true ? '  → ' + val : '')); }
+function bad(name, val) { lines.push('FAIL | ' + name + (val !== undefined ? '  → ' + val : '')); }
+function flush() { out.textContent = lines.join('\n'); }
+function chk(name, cond, val) { cond ? ok(name, val) : bad(name, val); }
+
+f.addEventListener('load', function () {
+  if (phase === 0) { phase = 1; setTimeout(runTests, 900); }
+});
+
+async function runTests() {
+  var w = f.contentWindow, d = f.contentDocument, fp = w.__fp;
+  var errs = [];
+  w.addEventListener('error', function (e) { errs.push(e.message); });
+  if (!fp) { lines.push('FATAL | window.__fp 未定义'); flush(); return; }
+  var S = fp.S;
+
+  chk('页面加载', d.querySelectorAll('.view').length === 5 && !!d.querySelector('#tabbar'));
+
+  // ---- 探索状态 ----
+  ok('初始状态', 'points=' + S.points + ' tasks=' + S.tasks.length + ' inv=' + JSON.stringify(S.inventory) +
+    ' pet=' + S.pet.type + '/' + S.pet.name + ' onboarded=' + S.onboarded + ' lv=' + JSON.stringify(fp.levelInfo()));
+
+  // ---- 任务 ----
+  fp.addTask('写代码');
+  fp.addTask('看文档');
+  chk('新建任务 2 条', S.tasks.length === 2, 'titles=' + S.tasks.map(function (x) { return x.title; }).join('/'));
+  var tid = S.tasks[0].id;
+  fp.switchView('tasks');
+  await wait(60);
+  var cb = d.querySelector('[data-check="' + tid + '"]');
+  if (cb) { cb.click(); await wait(60); }
+  var tt = S.tasks.find(function (x) { return x.id === tid; });
+  chk('勾选任务 +5 积分', !!tt && tt.completed === true && S.points >= 5,
+    'points=' + S.points + ' completed=' + (tt && tt.completed));
+
+  // ---- 计时器 ----
+  fp.switchView('focus');
+  fp.startTimer();
+  chk('开始计时', S.timer.running === true, 'remain=' + S.timer.remain + ' endIn=' + Math.round((S.timer.endAt - Date.now()) / 1000) + 's');
+  fp.pauseTimer();
+  chk('暂停', S.timer.running === false, 'remain=' + S.timer.remain);
+  fp.startTimer(); fp.resetTimer();
+  chk('重置回满', S.timer.remain === fp.DUR(S.timer.mode), 'remain=' + S.timer.remain);
+
+  // ---- 单次结算 ----
+  var before = S.points, r0 = S.timer.round;
+  S.timer.mode = 'focus'; S.timer.running = true; S.timer.endAt = Date.now() - 1000;
+  fp.completeSession();
+  await wait(80);
+  chk('结算 +10 基础积分', S.points - before >= 10, 'points ' + before + '→' + S.points);
+  chk('round 只加 1（回归 bug）', S.timer.round === r0 + 1, 'round ' + r0 + '→' + S.timer.round);
+  chk('宠物心情 +8', Math.round(S.pet.mood) >= 80, 'mood=' + Math.round(S.pet.mood));
+  chk('写入日志', S.logs.length >= 1 && S.logs[0].type === 'focus', 'logs=' + S.logs.length + ' first=' + JSON.stringify(S.logs[0]));
+  fp.closeSheet();
+
+  // ---- 四连击 ----
+  var base = S.timer.round, cyc = S.settings.longEvery || 4, comboDelta = 0, comboRound = 0;
+  for (var i = 1; i <= cyc; i++) {
+    var p0 = S.points, rBefore = S.timer.round;
+    S.timer.mode = 'focus'; S.timer.running = true; S.timer.endAt = Date.now() - 1000;
+    fp.completeSession();
+    var dlt = S.points - p0;
+    if (rBefore % cyc === 0) { comboDelta = dlt; comboRound = rBefore; }
+    fp.closeSheet();
+    await wait(40);
+  }
+  chk('连续 ' + cyc + ' 轮 round 精确累加', S.timer.round === base + cyc, 'round ' + base + '→' + S.timer.round);
+  chk('第 ' + comboRound + ' 轮触发四连击奖励', comboDelta >= 25, '该轮 +' + comboDelta);
+  chk('循环结束模式正确', S.timer.mode === (S.timer.round % cyc === 0 ? 'long' : 'short'),
+    'mode=' + S.timer.mode + ' round=' + S.timer.round + ' remain=' + S.timer.remain + 's');
+
+  // ---- 商店 ----
+  fp.switchView('shop');
+  await wait(60);
+  var pA = S.points, apple0 = S.inventory.apple || 0;
+  fp.buyItem('apple');
+  chk('购买苹果片 -8', S.points === pA - 8 && (S.inventory.apple || 0) === apple0 + 1,
+    'points ' + pA + '→' + S.points + ' inventory.apple=' + (S.inventory.apple || 0));
+  var pB = S.points;
+  fp.buyItem('crown');
+  chk('积分不足时拒绝购买', S.points === pB, 'points 保持 ' + S.points);
+
+  // ---- 喂食 ----
+  S.pet.hunger = 40;
+  fp.useFood('apple');
+  chk('喂食提升饱食度', Math.round(S.pet.hunger) > 40, 'hunger 40→' + Math.round(S.pet.hunger) + ' apple=' + (S.inventory.apple || 0));
+
+  // ---- 签到 ----
+  var s0 = S.points;
+  fp.signIn();
+  chk('签到 +10', S.points === s0 + 10, 'points ' + s0 + '→' + S.points);
+
+  // ---- 备份往返 ----
+  var snap = fp.exportData();
+  fp.closeSheet();
+  chk('导出生成 JSON', typeof snap === 'string' && snap.length > 200, 'len=' + (snap ? snap.length : 0));
+  var ptsKeep = S.points;
+  S.points = 9999;
+  var impOk = fp.importText(snap);
+  var S2 = fp.S;
+  chk('导入恢复进度', impOk === true && S2.points === ptsKeep, 'points 9999→' + S2.points + ' impOk=' + impOk);
+
+  // ---- 持久化 ----
+  await wait(260);
+  var raw = w.localStorage.getItem('focuspet.state.v1');
+  var parsed = null;
+  try { parsed = raw ? JSON.parse(raw) : null; } catch (e) {}
+  chk('localStorage 已落盘', !!parsed && parsed.points === fp.S.points, 'bytes=' + (raw ? raw.length : 0) + ' points=' + (parsed && parsed.points));
+
+  // ---- 视图 ----
+  var allOk = true;
+  ['tasks', 'pet', 'shop', 'me', 'focus'].forEach(function (v) {
+    fp.switchView(v);
+    var el = d.querySelector('#view-' + v);
+    if (!el || !el.classList.contains('active')) allOk = false;
+  });
+  chk('五个视图切换', allOk);
+  chk('宠物 SVG 已渲染', !!d.querySelector('#petBox svg'));
+  chk('无 JS 报错', errs.length === 0, 'errs=' + JSON.stringify(errs));
+
+  flush();
+}
+window.addEventListener('error', function (e) { lines.push('WINDOW-ERR | ' + e.message); flush(); });
+</script>
+</body></html>

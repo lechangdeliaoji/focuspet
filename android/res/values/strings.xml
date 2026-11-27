@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">番茄宠物</string>
+    <string name="notif_channel">专注提醒</string>
+    <string name="notif_channel_desc">番茄钟到点提醒</string>
+</resources>
