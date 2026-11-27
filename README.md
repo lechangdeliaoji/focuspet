@@ -149,7 +149,9 @@ pomodoro-pet/
 │   ├── pack.py                    # 往 APK 里追加 dex 与 assets
 │   ├── _probe.html                # 布局自检（390×844 iframe 溢出检测）
 │   ├── _test.html                 # 玩法冒烟测试（24 项断言）
-│   └── CropShots.java             # 截图裁切成手机宽度（docs 用）
+│   ├── CropShots.java             # 截图裁切成手机宽度（docs 用）
+│   ├── gh_push.py                 # 走 Git Data API 推快照（github.com:443 不通时可用）
+│   └── gh_release.py              # 建 Release 并上传 APK asset
 └── build.sh
 ```
 
