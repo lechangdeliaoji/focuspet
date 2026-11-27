@@ -3,7 +3,7 @@
 一个**真 Android APK**（不是网页套壳 PWA）：番茄钟计时 + 积分 + 虚拟宠物养成 + 商店兑换。
 界面用 WebView 承载本地 H5（离线可用、无任何服务器），原生侧补齐网页做不到的能力：**精确闹钟到点通知、震动、计时期间屏幕常亮、常驻后台不丢时间**。
 
-- 安装包：`FocusPet-v1.0.apk`（约 166 KB）
+- 安装包：**[FocusPet-v1.0.apk](https://github.com/lechangdeliaoji/focuspet/raw/main/FocusPet-v1.0.apk)**（约 166 KB）
 - 包名：`com.focuspet.tomato` / minSdk 24（Android 7.0+）/ targetSdk 34
 - 完全离线运行，所有数据只存在手机本地
 
@@ -21,7 +21,7 @@
 
 ## 一、安装
 
-1. 把 `FocusPet-v1.0.apk` 传到手机上（数据线 / 微信文件传输 / 网盘均可）。
+1. 手机浏览器打开 **[下载链接](https://github.com/lechangdeliaoji/focuspet/raw/main/FocusPet-v1.0.apk)** 直接下载，或用数据线 / 微信文件传输 / 网盘把 `FocusPet-v1.0.apk` 传到手机。
 2. 点击安装，若提示「禁止安装未知来源应用」，在弹窗里选择「设置 → 允许来自此来源」再返回继续。
 3. 首次启动会请求**通知权限**（Android 13+），请允许 —— 否则到点没有提醒。
 4. 想开**精确闹钟**：设置 → 应用 → 番茄宠物 → 闹钟和提醒 → 允许。没有开启也能用，只是系统可能把提醒延迟几十秒。
